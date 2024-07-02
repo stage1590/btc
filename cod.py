@@ -1,32 +1,27 @@
-import hashlib
 import base58
+import hashlib
+import ecdsa
 
-def decode_base58(address):
-    return base58.b58decode(address)
+# Endereço Bitcoin fornecido
+endereco_bitcoin = "13zb1hQbWVsc2S7ZTZnP2G4undNNpdh5so"
 
-def convert_to_hex(data):
-    return data.hex()
+# Decodificar o endereço Bitcoin de Base58 para bytes
+endereco_bytes = base58.b58decode(endereco_bitcoin)
 
-def ripemd160(data):
-    h = hashlib.new('ripemd160')
-    h.update(data)
-    return h.digest()
+# Remover o prefixo de versão (primeiro byte)
+endereco_sem_prefixo = endereco_bytes[1:]
 
-def decode_bitcoin_address(address):
-    # Passo 1: Decodificar endereço Base58 para obter o hash RIPEMD-160
-    decoded = decode_base58(address)
-    hash160 = decoded[1:-4]  # Remove o prefixo de versão e o checksum
+# Calcular o checksum
+checksum_calculado = hashlib.sha256(hashlib.sha256(endereco_sem_prefixo).digest()).digest()[:4]
 
-    # Passo 2: Converte para formato hexadecimal
-    hash160_hex = convert_to_hex(hash160)
+# Verificar se o checksum no endereço corresponde ao checksum calculado
+if endereco_bytes[-4:] != checksum_calculado:
+    raise ValueError("Endereço Bitcoin inválido")
 
-    return hash160_hex
+# Extrair o hash RIPEMD-160 do endereço
+ripemd160 = endereco_sem_prefixo[:-4]
 
-def main():
-    bitcoin_address = '13zb1hQbWVsc2S7ZTZnP2G4undNNpdh5so'
-    hash160_hex = decode_bitcoin_address(bitcoin_address)
+# Construir a chave pública a partir do hash RIPEMD-160
+chave_publica = ripemd160.hex()
 
-    print("Hash RIPEMD-160 em hexadecimal:", hash160_hex)
-
-if __name__ == "__main__":
-    main()
+print("Chave pública (HEX):", chave_publica)
